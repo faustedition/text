@@ -45,6 +45,7 @@ public abstract class XMLTransformerConfigurationBase<T> implements XMLTransform
     private Set<Name> included = Sets.newHashSet();
     private Set<Name> lineElements = Sets.newHashSet();
     private Set<Name> containerElements = Sets.newHashSet();
+    private Set<Name> whitespaceTrimmingElements = Sets.newHashSet();
     private Set<Name> notableElements = Sets.newHashSet();
     private char notableCharacter = '\u25CA';
     private boolean compressingWhitespace = true;
@@ -89,6 +90,19 @@ public abstract class XMLTransformerConfigurationBase<T> implements XMLTransform
     public boolean isContainerElement(XMLEntity entity) {
         return containerElements.contains(entity.getName());
     }
+
+    public void addWhitespaceTrimmingElement(Name wsTrimmingElementName) {
+        whitespaceTrimmingElements.add(wsTrimmingElementName);
+    }
+
+    public boolean removeWhitespaceTrimmingElement(Name wsTrimmingElementName) {
+        return containerElements.remove(wsTrimmingElementName);
+    }
+
+    public boolean isWhitespaceTrimmingElement(XMLEntity entity) {
+        return whitespaceTrimmingElements.contains(entity.getName());
+    }
+
 
     public void include(Name name) {
         included.add(name);

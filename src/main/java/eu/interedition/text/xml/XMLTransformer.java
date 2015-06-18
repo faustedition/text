@@ -51,6 +51,8 @@ public class XMLTransformer<T> {
     private final Stack<XMLEntity> elementContext = new Stack<XMLEntity>();
     private final Stack<Boolean> inclusionContext = new Stack<Boolean>();
     private final Stack<Boolean> spacePreservationContext = new Stack<Boolean>();
+    private final Stack<Boolean> spaceTrimmingContext = new Stack<Boolean>();
+    private boolean processingLeadingWhitespace = false;
     private final XMLNodePath nodePath = new XMLNodePath();
 
     private Layer<T> source;
@@ -166,9 +168,19 @@ public class XMLTransformer<T> {
         return spacePreservationContext;
     }
 
+    public Stack<Boolean> getSpaceTrimmingContext() {
+        return spaceTrimmingContext;
+    }
+
+
     public boolean isSpacePreserved() {
         return !spacePreservationContext.isEmpty() && spacePreservationContext.peek();
     }
+
+    public boolean isSpaceTrimmed() {
+        return !spaceTrimmingContext.isEmpty() && spaceTrimmingContext.peek();
+    }
+
 
     public Stack<XMLEntity> getElementContext() {
         return elementContext;
@@ -217,6 +229,16 @@ public class XMLTransformer<T> {
                         mapOffsetDelta(0, 1);
                         continue;
                     }
+
+                    if (!Character.isWhitespace(currentChar)) {
+                        processingLeadingWhitespace = false;
+                    }
+
+                    if (!preserveSpace && processingLeadingWhitespace && isSpaceTrimmed() && Character.isWhitespace(currentChar)) {
+                        mapOffsetDelta(0,1);
+                        continue;
+                    }
+
                     if (currentChar == '\n' || currentChar == '\r') {
                         currentChar = ' ';
                     }
@@ -252,6 +274,8 @@ public class XMLTransformer<T> {
         elementContext.clear();
         inclusionContext.clear();
         spacePreservationContext.clear();
+        spaceTrimmingContext.clear();
+        processingLeadingWhitespace = false;
         nodePath.clear();
 
         textBuffer = new FileBackedOutputStream(configuration.getTextBufferSize(), true);
@@ -296,6 +320,13 @@ public class XMLTransformer<T> {
             spacePreservationContext.push("preserve".equalsIgnoreCase(xmlSpace.toString()));
         }
 
+        spaceTrimmingContext.push(configuration.isWhitespaceTrimmingElement(entity)
+                || (spaceTrimmingContext.empty() ? false : spaceTrimmingContext.peek()));
+        if (configuration.isWhitespaceTrimmingElement(entity)) {
+             processingLeadingWhitespace = true;
+        }
+
+
         nodePath.set(entity.getAttributes());
         nodePath.push(0);
 
@@ -318,6 +349,7 @@ public class XMLTransformer<T> {
         elementContext.pop();
         nodePath.pop();
         spacePreservationContext.pop();
+        spaceTrimmingContext.pop();
         inclusionContext.pop();
     }
 

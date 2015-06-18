@@ -33,6 +33,8 @@ public interface XMLTransformerConfiguration<T> {
 
     boolean isContainerElement(XMLEntity entity);
 
+    boolean isWhitespaceTrimmingElement(XMLEntity entity);
+
     boolean included(XMLEntity entity);
 
     boolean excluded(XMLEntity entity);
